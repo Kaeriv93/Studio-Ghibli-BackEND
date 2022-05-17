@@ -8,6 +8,11 @@ const session = require('express-session')
 const MongoStore = require('connect-mongo')
 const navLinks = require('./navLinks')
 
+// const bcrypt = require('bycrypt')
+const saltRounds = 10;
+const jwt = require('jsonwebtoken')
+
+
 //Import middleware
 const cors = require('cors')
 const morgan = require('morgan')
@@ -28,6 +33,7 @@ app.use(express.json())
 //Models
 const db = require('./models')
 const { User } = require('./models')
+const { token } = require('morgan')
 
 //Hitting Routes
 app.get('/', (req,res)=>{
@@ -69,11 +75,18 @@ app.post('/login', async function (req,res) {
         if(!foundUser) return res.send('The password or the username is invalid')
         const match = await bcrypt.compare(req.body.password, foundUser.password)
         if(!match) return res.send('The password or the username is invalid')
-
+        
         req.session.currentUser={
             id: foundUser._id,
-            username: foundUser.username
+            username: foundUser.username,
+            token : jwt.sign({id}, 'jwtSecret', {
+                expiresIn:300,
+            })
         }
+        res.json({auth:true, token: token, result: foundUser})
+        
+
+
     }catch(err){
         console.log(err)
         req.err = err
