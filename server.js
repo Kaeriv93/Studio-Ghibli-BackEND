@@ -79,11 +79,9 @@ app.post('/login', async function (req,res) {
         req.session.currentUser={
             id: foundUser._id,
             username: foundUser.username,
-            token : jwt.sign({id}, 'jwtSecret', {
-                expiresIn:300,
-            })
+
         }
-        res.json({auth:true, token: token, result: foundUser})
+
         
 
 
