@@ -6,7 +6,8 @@ const app = express()
 const mongoose = require('mongoose')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')
-const navLinks = require('./navLinks')
+// const navLinks = require('./navLinks')
+const cookieSession = require('cookie-session')
 
 // const bcrypt = require('bycrypt')
 const saltRounds = 10;
@@ -33,35 +34,35 @@ app.use(express.json())
 //Models
 const db = require('./models')
 const { User } = require('./models')
-const { token } = require('morgan')
+
 
 //Hitting Routes
 app.get('/', (req,res)=>{
     res.send('Hello World')
 })
 
-app.use(
-    session({
-        // where to store the sessions in mongodb
-        store: MongoStore.create({ mongoUrl: "mongodb+srv://jonny:jonny@studio-ghibli.xnf7y.mongodb.net/myFirstDatabase?retryWrites=true&w=majority" }),
-        // secret key is used to sign every cookie to say its is valid
-        secret: "super secret",
-        resave: false,
-        saveUninitialized: false,
-        // configure the experation of the cookie
-        cookie: {
-            maxAge: 1000 * 60 * 60 * 24 * 7 * 2, // two weeks
-        },
-    })
-);
+// app.use(
+//     session({
+//         // where to store the sessions in mongodb
+//         store: MongoStore.create({ mongoUrl: "mongodb+srv://jonny:jonny@studio-ghibli.xnf7y.mongodb.net/myFirstDatabase?retryWrites=true&w=majority" }),
+//         // secret key is used to sign every cookie to say its is valid
+//         secret: "super secret",
+//         resave: false,
+//         saveUninitialized: false,
+//         // configure the experation of the cookie
+//         cookie: {
+//             maxAge: 1000 * 60 * 60 * 24 * 7 * 2, // two weeks
+//         },
+//     })
+// );
 
-app.use(navLinks)
-app.use(function (req, res, next) {
-    res.locals.user = req.session.currentUser;
-    console.log(res.locals);
-    console.log(`Current user is ${res.locals.user}`)
-    next();
-});
+// app.use(navLinks)
+// app.use(function (req, res, next) {
+//     res.locals.user = req.session.currentUser;
+//     console.log(res.locals);
+//     console.log(`Current user is ${res.locals.user}`)
+//     next();
+// });
 
 
 //Login Route
@@ -104,7 +105,7 @@ app.post('/register', async (req,res,next)=>{
         if(foundUser){
             return res.send('Already have account')
         }
-        const salt = await bcrypt.genSalt(process.SALT_ROUNDS)
+        const salt = await bcrypt.genSalt(12)
         console.log(salt)
         const hash = await bcrypt.hash(req.bpdy.password, salt)
         console.log(hash)
