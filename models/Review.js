@@ -17,7 +17,7 @@ const reviewSchema = new mongoose.Schema({
     },
     titleofFilm:{
         type:String,
-        required:[true, 'Need to specify which film']
+        // required:[true, 'Need to specify which film']
     }
 },{timestamps:true})
 

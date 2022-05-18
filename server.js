@@ -6,7 +6,7 @@ const app = express()
 const mongoose = require('mongoose')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')
-// const navLinks = require('./navLinks')
+const navLinks = require('./navLinks')
 const cookieSession = require('cookie-session')
 
 // const bcrypt = require('bycrypt')
@@ -41,28 +41,28 @@ app.get('/', (req,res)=>{
     res.send('Hello World')
 })
 
-// app.use(
-//     session({
-//         // where to store the sessions in mongodb
-//         store: MongoStore.create({ mongoUrl: "mongodb+srv://jonny:jonny@studio-ghibli.xnf7y.mongodb.net/myFirstDatabase?retryWrites=true&w=majority" }),
-//         // secret key is used to sign every cookie to say its is valid
-//         secret: "super secret",
-//         resave: false,
-//         saveUninitialized: false,
-//         // configure the experation of the cookie
-//         cookie: {
-//             maxAge: 1000 * 60 * 60 * 24 * 7 * 2, // two weeks
-//         },
-//     })
-// );
+app.use(
+    session({
+        // where to store the sessions in mongodb
+        store: MongoStore.create({ mongoUrl: "mongodb+srv://jonny:jonny@studio-ghibli.xnf7y.mongodb.net/myFirstDatabase?retryWrites=true&w=majority" }),
+        // secret key is used to sign every cookie to say its is valid
+        secret: "super secret",
+        resave: false,
+        saveUninitialized: false,
+        // configure the experation of the cookie
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24 * 7 * 2, // two weeks
+        },
+    })
+);
 
-// app.use(navLinks)
-// app.use(function (req, res, next) {
-//     res.locals.user = req.session.currentUser;
-//     console.log(res.locals);
-//     console.log(`Current user is ${res.locals.user}`)
-//     next();
-// });
+app.use(navLinks)
+app.use(function (req, res, next) {
+    res.locals.user = req.session.currentUser;
+    console.log(res.locals);
+    console.log(`Current user is ${res.locals.user}`)
+    next();
+});
 
 
 //Login Route
@@ -71,25 +71,14 @@ app.get('/login', (req,res)=>{
 })
 
 app.post('/login', async function (req,res) {
-    try{
-        const foundUser = await db.User.findOne({email: req.body.email})
-        if(!foundUser) return res.send('The password or the username is invalid')
-        const match = await bcrypt.compare(req.body.password, foundUser.password)
-        if(!match) return res.send('The password or the username is invalid')
-        
-        req.session.currentUser={
-            id: foundUser._id,
-            username: foundUser.username,
-
-        }
-
-        
-
-
-    }catch(err){
-        console.log(err)
-        req.err = err
-        res.send(err)
+    const foundUser = await db.User.findOne({
+        email: req.body.email,
+        password: req.body.password
+    })
+    if(foundUser){
+        return res.json({status:'Good', user:true})
+    }else{
+        return res.json({status:'error', user:false})
     }
 })
 
@@ -99,23 +88,20 @@ app.get('/register', (req,res)=>{
     res.send('This is the register page')
 })
 
-app.post('/register', async (req,res,next)=>{
+app.post('/register', async (req,res)=>{
     try{
-        const foundUser = await User.exists({email:req.body.email})
-        if(foundUser){
-            return res.send('Already have account')
-        }
-        const salt = await bcrypt.genSalt(12)
-        console.log(salt)
-        const hash = await bcrypt.hash(req.bpdy.password, salt)
-        console.log(hash)
-        req.body.password = hash
-        const newUser = await User.create(req.body)
-        return res.send('Return to login')
+      await db.User.create({
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          username: req.body.username,
+          email: req.body.email,
+          password: req.body.password
+      })
+      res.json({status:'Good'})
     }catch(error){
         console.log(error)
         req.error= error
-        return next()
+        return res.json({status:'error', error:'Email already exists'})
     }
 })
 
