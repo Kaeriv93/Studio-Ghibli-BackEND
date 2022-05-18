@@ -1,10 +1,11 @@
 const User = require("../models/User")
 const jwt = require('jsonwebtoken')
+const {JWT_SECRET} = process.env
 
 module.exports.checkUser = (req,res,next) =>{
     const token = req.cookies.jwt
     if(token){
-        jwt.verify(token,JWT_SECRET, async(err,decodedToken)=>{
+        jwt.verify(token, JWT_SECRET, async(err,decodedToken)=>{
             if(err){
                 res.json({status:false})
                 next()
