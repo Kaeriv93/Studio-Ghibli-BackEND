@@ -16,12 +16,12 @@ const userSchema = new mongoose.Schema({
     },
     email:{
         type: String,
-        required:[true, 'Email can not be blank'],
+        required:[true, 'Email is required'],
         unique: true
     },
     password:{
         type:String,
-        required:[true,'Don`t leave password empty']
+        required:[true,'Password is required']
     },
     profilepic:{
         type:String,

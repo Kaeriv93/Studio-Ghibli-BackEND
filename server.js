@@ -3,15 +3,9 @@ require('dotenv').config()
 const express = require('express')
 const {PORT = 4000, MONGODB_URL} = process.env
 const app = express()
+const authRoutes = require('./Routes/AuthRoutes')
 const mongoose = require('mongoose')
-const session = require('express-session')
-const MongoStore = require('connect-mongo')
-const navLinks = require('./navLinks')
-const cookieSession = require('cookie-session')
-
-// const bcrypt = require('bycrypt')
-const saltRounds = 10;
-const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 
 
 //Import middleware
@@ -19,268 +13,233 @@ const cors = require('cors')
 const morgan = require('morgan')
 
 //Mongo Connections
-mongoose.connect(MONGODB_URL)
-
-mongoose.connection
-.on('open', ()=> console.log('You are connected to mongoose'))
-.on('close', ()=> console.log('You are disconnected from mongoose'))
-.on('error',(error)=> console.log(error))
+mongoose.connect(MONGODB_URL,{
+    useNewUrlParser:true,
+    useUnifiedTopology:true,
+}).then(()=>{
+    console.log('DB Connection Successful! You now have access to our backend server!')
+}).catch(err=>{
+    console.log(err.message)
+})
 
 //Middleware
-app.use(cors())
+app.use(cors({
+    origin: '*',
+    method:['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+}))
 app.use(morgan('dev'))
 app.use(express.json())
-
-//Models
-const db = require('./models')
-const { User } = require('./models')
+app.use(cookieParser())
+app.use('/', authRoutes)
 
 
-//Hitting Routes
+// const db = require('./models')
+
+
+
+
 app.get('/', (req,res)=>{
     res.send('Hello World')
 })
 
-app.use(
-    session({
-        // where to store the sessions in mongodb
-        store: MongoStore.create({ mongoUrl: "mongodb+srv://jonny:jonny@studio-ghibli.xnf7y.mongodb.net/myFirstDatabase?retryWrites=true&w=majority" }),
-        // secret key is used to sign every cookie to say its is valid
-        secret: "super secret",
-        resave: false,
-        saveUninitialized: false,
-        // configure the experation of the cookie
-        cookie: {
-            maxAge: 1000 * 60 * 60 * 24 * 7 * 2, // two weeks
-        },
-    })
-);
-
-app.use(navLinks)
-app.use(function (req, res, next) {
-    res.locals.user = req.session.currentUser;
-    console.log(res.locals);
-    console.log(`Current user is ${res.locals.user}`)
-    next();
-});
-
-
-//Login Route
-app.get('/login', (req,res)=>{
-    res.send('This is the login page')
-})
-
-app.post('/login', async function (req,res) {
-    const foundUser = await db.User.findOne({
-        email: req.body.email,
-        password: req.body.password
-    })
-    if(foundUser){
-        return res.json({status:'Good', user:true})
-    }else{
-        return res.json({status:'error', user:false})
-    }
-})
-
-// Register
-
 app.get('/register', (req,res)=>{
-    res.send('This is the register page')
-})
-
-app.post('/register', async (req,res)=>{
-    try{
-      await db.User.create({
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          username: req.body.username,
-          email: req.body.email,
-          password: req.body.password
-      })
-      res.json({status:'Good'})
-    }catch(error){
-        console.log(error)
-        req.error= error
-        return res.json({status:'error', error:'Email already exists'})
-    }
-})
-
-app.get('/logout', async(req,res)=>{
-    try{
-        await req.session.destroy()
-        console.log(req.session)
-        return res.send('You are logged out!')
-    } catch(error){
-        console.log(error)
-        return res.send(error)
-    }
-})
-
-// User Crud
-app.get('/users', async (req,res)=>{
-    try{
-        res.json(await db.User.find({}))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.post('/users', async(req,res)=>{
-    try{
-        res.json(await db.User.create(req.body))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.get('/userpage/:id', async(req,res)=>{
-    try{
-        res.json(await db.User.findById(req.params.id))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.put('/userpage/:id', async(req,res)=>{
-    try{
-        res.json(await db.User.findByIdAndUpdate(req.params.id,req.body))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.delete('/userpage/:id', async(req,res)=>{
-    try{
-        res.json(await db.User.findByIdAndRemove(req.params.id))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-//Reviews
-app.get('/reviews', async(req,res)=>{
-    try{
-        res.json(await db.Review.find({}))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.post('/reviews', async(req,res, next)=>{
-    try{
-       res.json(await db.Review.create(req.body))
-
-    }catch(error){
-        console.log(error)
-        req.error = error
-        return next()
-    }
-})
-
-app.put('/reviews/:id', async(req,res)=>{
-    try{
-        res.json(await db.Review.findByIdAndUpdate(req.params.id, req.body))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.delete('/reviews/:id', async(req,res)=>{
-    try{
-        res.json(await db.Review.findByIdAndRemove(req.params.id))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-//Favorites
-app.get('/userpage/:id/favorites', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Favorite.find({}))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.post('/userpage/:id/favorites', async(req,res, next)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-       res.json(await db.Favorite.create(req.body))
-
-    }catch(error){
-        console.log(error)
-        req.error = error
-        return next()
-    }
-})
-
-app.put('/userpage/:id/favorites', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Favorite.findByIdAndUpdate(req.params.id, req.body))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.delete('/userpage/:id/favorites', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Favorite.findByIdAndRemove(req.params.id))
-    }catch(error){
-        res.status(400).json(error)
-    }
+    res.send('This is the register')
 })
 
 
-//Friends
-app.get('/userpage/:id/friends', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Friends.find({}))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
 
-app.post('/userpage/:id/friends', async(req,res, next)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-       res.json(await db.Friends.create(req.body))
+// app.get('/login', (req,res)=>{
+//     res.send('This is the login page')
+// })
 
-    }catch(error){
-        console.log(error)
-        req.error = error
-        return next()
-    }
-})
+// app.post('/login', async function (req,res) {
+//     const foundUser = await db.User.findOne({
+//         email: req.body.email,
+//         password: req.body.password
+//     })
+//     if(foundUser){
+//         return res.json({status:'Good', user:true})
+//     }else{
+//         return res.json({status:'error', user:false})
+//     }
+// })
 
-app.put('/userpage/:id/friends', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Friends.findByIdAndUpdate(req.params.id, req.body))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
 
-app.delete('/userpage/:id/friends', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Friends.findByIdAndRemove(req.params.id))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
+
+// app.get('/logout', async(req,res)=>{
+//     try{
+//         await req.session.destroy()
+//         console.log(req.session)
+//         return res.send('You are logged out!')
+//     } catch(error){
+//         console.log(error)
+//         return res.send(error)
+//     }
+// })
+
+
+// app.get('/users', async (req,res)=>{
+//     try{
+//         res.json(await db.User.find({}))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.post('/users', async(req,res)=>{
+//     try{
+//         res.json(await db.User.create(req.body))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.get('/userpage/:id', async(req,res)=>{
+//     try{
+//         res.json(await db.User.findById(req.params.id))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.put('/userpage/:id', async(req,res)=>{
+//     try{
+//         res.json(await db.User.findByIdAndUpdate(req.params.id,req.body))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.delete('/userpage/:id', async(req,res)=>{
+//     try{
+//         res.json(await db.User.findByIdAndRemove(req.params.id))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.get('/reviews', async(req,res)=>{
+//     try{
+//         res.json(await db.Review.find({}))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.post('/reviews', async(req,res, next)=>{
+//     try{
+//        res.json(await db.Review.create(req.body))
+
+//     }catch(error){
+//         console.log(error)
+//         req.error = error
+//         return next()
+//     }
+// })
+
+// app.put('/reviews/:id', async(req,res)=>{
+//     try{
+//         res.json(await db.Review.findByIdAndUpdate(req.params.id, req.body))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.delete('/reviews/:id', async(req,res)=>{
+//     try{
+//         res.json(await db.Review.findByIdAndRemove(req.params.id))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.get('/userpage/:id/favorites', async(req,res)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//         res.json(await db.Favorite.find({}))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.post('/userpage/:id/favorites', async(req,res, next)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//        res.json(await db.Favorite.create(req.body))
+
+//     }catch(error){
+//         console.log(error)
+//         req.error = error
+//         return next()
+//     }
+// })
+
+// app.put('/userpage/:id/favorites', async(req,res)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//         res.json(await db.Favorite.findByIdAndUpdate(req.params.id, req.body))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.delete('/userpage/:id/favorites', async(req,res)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//         res.json(await db.Favorite.findByIdAndRemove(req.params.id))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+
+// app.get('/userpage/:id/friends', async(req,res)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//         res.json(await db.Friends.find({}))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.post('/userpage/:id/friends', async(req,res, next)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//        res.json(await db.Friends.create(req.body))
+
+//     }catch(error){
+//         console.log(error)
+//         req.error = error
+//         return next()
+//     }
+// })
+
+// app.put('/userpage/:id/friends', async(req,res)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//         res.json(await db.Friends.findByIdAndUpdate(req.params.id, req.body))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
+
+// app.delete('/userpage/:id/friends', async(req,res)=>{
+//     try{
+//         const foundUser = await db.User.findById(req.params.id)
+//         if(!foundUser) return res.send('Can not find user')
+//         res.json(await db.Friends.findByIdAndRemove(req.params.id))
+//     }catch(error){
+//         res.status(400).json(error)
+//     }
+// })
 
 //Listening
 app.listen(PORT,()=>console.log(`Listening on port:${PORT}`))
