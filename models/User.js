@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const bcyrpt = require ('bcrypt')
 
 const userSchema = new mongoose.Schema({
     firstName:{
@@ -36,6 +37,10 @@ const userSchema = new mongoose.Schema({
 },
 {
     timestamps:true
+
+})
+
+userSchema.pre('save', async function(next){
 
 })
 

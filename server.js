@@ -6,6 +6,11 @@ const app = express()
 const authRoutes = require('./Routes/AuthRoutes')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
+const corsOptions ={
+    origin:'http://localhost:3000', 
+    credentials:true,            //access-control-allow-credentials:true
+    optionSuccessStatus:200
+}
 
 
 //Import middleware
@@ -23,11 +28,7 @@ mongoose.connect(MONGODB_URL,{
 })
 
 //Middleware
-app.use(cors({
-    origin: '*',
-    method:['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-}))
+app.use(cors(corsOptions))
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
