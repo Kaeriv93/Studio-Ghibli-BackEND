@@ -35,7 +35,7 @@ app.use(cookieParser())
 app.use('/', authRoutes)
 
 
-// const db = require('./models')
+const db = require('./models')
 
 
 
