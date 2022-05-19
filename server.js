@@ -116,6 +116,16 @@ app.get('/userpage/:id', async(req,res)=>{
 app.put('/userpage/:id', async(req,res)=>{
     try{
         res.json(await db.User.findByIdAndUpdate(req.params.id,req.body))
+
+    }catch(error){
+        res.status(400).json(error)
+    }
+})
+
+app.put('/userpage/:id', async(req,res)=>{
+    try{
+        res.json(await db.User.favorites.create(req.body))
+        
     }catch(error){
         res.status(400).json(error)
     }
