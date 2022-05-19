@@ -8,13 +8,14 @@ const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const axios = require('axios')
 const session = require('express-session')
-const corsOptions ={
+const cors = require('cors')
+// const corsOptions ={
 
-    origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app',process.env.NODE_ENV === "production"],
+//     origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app',process.env.NODE_ENV === "production"],
 
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200
-}
+//     credentials:true,            //access-control-allow-credentials:true
+//     optionSuccessStatus:200
+// }
 
 let JWTToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyODU2MzU3OGFmMWI2MmUyZTg3OTk4OCIsImlhdCI6MTY1MjkzMTY2OSwiZXhwIjoxNjUzMTkwODY5fQ.1reFkmuMyjUmpWrDuJON1F64-xrKS2-GF1-XdjEkehE'; // Get this from cookie or localstorage, hardcoded for demonstration.
  axios
@@ -27,7 +28,6 @@ let JWTToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyODU2MzU3OGFmMWI
 
 
 //Import middleware
-const cors = require('cors')
 const morgan = require('morgan')
 
 //Mongo Connections
@@ -41,7 +41,7 @@ mongoose.connect(MONGODB_URL,{
 })
 
 //Middleware
-app.use(cors(corsOptions))
+// app.use(cors())
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
@@ -50,18 +50,26 @@ app.use('/', authRoutes)
 app.set("trust proxy", 1);
 app.use(
     session({
-      secret: process.env.SESSION_SECRET || 'Super Secret',
-      resave: true,
-      saveUninitialized: false,
-      cookie: {
-        sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
-        secure: process.env.NODE_ENV === "production", 
-        
-
-        
-      }
+        secret: process.env.SESSION_SECRET || 'Super Secret',
+        resave: true,
+        saveUninitialized: false,
+        cookie: {
+            sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
+            secure: process.env.NODE_ENV === "production", 
+            
+            
+            
+        }
     })
- );
+    );
+    
+    
+    app.use(
+        cors({
+          credentials: true,
+          origin: process.env.ORIGIN || 'http://localhost:3000/'
+        })
+      );
 
 
 const db = require('./models')
@@ -82,9 +90,6 @@ app.get('/register', (req,res)=>{
 app.get('/login', (req,res)=>{
     res.send('This is the login page')
 })
-
-
-
 
 
 
