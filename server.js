@@ -164,39 +164,6 @@ app.delete('/reviews/:id', async(req,res)=>{
     }
 })
 
-app.get('/userpage/:id/favorites', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Favorite.find({}))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
-app.post('/userpage/:id/favorites', async(req,res, next)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-       res.json(await db.Favorite.create(req.body))
-
-    }catch(error){
-        console.log(error)
-        req.error = error
-        return next()
-    }
-})
-
-app.put('/userpage/:id/favorites', async(req,res)=>{
-    try{
-        const foundUser = await db.User.findById(req.params.id)
-        if(!foundUser) return res.send('Can not find user')
-        res.json(await db.Favorite.findByIdAndUpdate(req.params.id, req.body))
-    }catch(error){
-        res.status(400).json(error)
-    }
-})
-
 app.delete('/userpage/:id/favorites', async(req,res)=>{
     try{
         const foundUser = await db.User.findById(req.params.id)
