@@ -11,15 +11,6 @@ const session = require('express-session')
 const cors = require('cors')
 const { shouldSendSameSiteNone } = require('should-send-same-site-none');
 
-// const corsOptions ={
-
-//     origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app',process.env.NODE_ENV === "production"],
-
-//     credentials:true,            //access-control-allow-credentials:true
-//     optionSuccessStatus:200
-// }
-
-
 //Import middleware
 const morgan = require('morgan')
 
@@ -42,7 +33,7 @@ app.use(shouldSendSameSiteNone);
 app.use(
     cors({
       credentials: true,
-      origin: [process.env.ORIGIN,'http://localhost:3000/']
+      origin: [process.env.ORIGIN,'http://localhost:3000']
     })
   );
 app.use('/', authRoutes)
@@ -64,7 +55,7 @@ app.use(
         resave: true,
         saveUninitialized: false,
         cookie: {
-            sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
+            sameSite: process.env.NODE_ENV === 'none',
             secure: process.env.NODE_ENV === "production", 
             
             
@@ -80,15 +71,10 @@ const db = require('./models')
 
 
 app.get('/', function (req, res) {
-    // Set cookie with SameSite='None' as needed;
     res.cookie("foo", "bar", { sameSite: "none", secure: true });
     res.send('hello world');
   });
   
-
-// app.get('/', (req,res)=>{
-//     res.send('Hello World')
-// })
 
 app.get('/register', (req,res)=>{
     res.send('This is the register')
