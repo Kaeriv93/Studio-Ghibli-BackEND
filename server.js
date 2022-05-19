@@ -7,7 +7,7 @@ const authRoutes = require('./Routes/AuthRoutes')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const corsOptions ={
-    origin:'http://localhost:3000', 
+    origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app'], 
     credentials:true,            //access-control-allow-credentials:true
     optionSuccessStatus:200
 }
