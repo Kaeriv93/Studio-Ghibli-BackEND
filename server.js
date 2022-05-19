@@ -10,7 +10,7 @@ const axios = require('axios')
 const session = require('express-session')
 const corsOptions ={
 
-    origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app'],
+    origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app',process.env.NODE_ENV === "production"],
 
     credentials:true,            //access-control-allow-credentials:true
     optionSuccessStatus:200
@@ -55,7 +55,10 @@ app.use(
       saveUninitialized: false,
       cookie: {
         sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
-        secure: process.env.NODE_ENV === "production", // must be true if sameSite='none'
+        secure: process.env.NODE_ENV === "production", 
+        
+
+        
       }
     })
  );
