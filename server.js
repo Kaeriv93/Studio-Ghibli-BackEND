@@ -6,11 +6,21 @@ const app = express()
 const authRoutes = require('./Routes/AuthRoutes')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
+const axios = require('axios')
 const corsOptions ={
-    origin:'http://localhost:3000',
+    origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app'],
     credentials:true,            //access-control-allow-credentials:true
     optionSuccessStatus:200
 }
+
+let JWTToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyODU2MzU3OGFmMWI2MmUyZTg3OTk4OCIsImlhdCI6MTY1MjkzMTY2OSwiZXhwIjoxNjUzMTkwODY5fQ.1reFkmuMyjUmpWrDuJON1F64-xrKS2-GF1-XdjEkehE'; // Get this from cookie or localstorage, hardcoded for demonstration.
+ axios
+    .get("/", { headers: {"Authorization" : `Bearer ${JWTToken}`} })
+    .then(res => {
+       this.profile = res.data;
+       console.log('Fetched Data is', res.data);
+      })
+      .catch(error => console.log(error)) 
 
 
 //Import middleware
