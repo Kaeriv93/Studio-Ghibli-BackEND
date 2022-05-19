@@ -14,10 +14,6 @@ const reviewSchema = new mongoose.Schema({
     username:{
         type: mongoose.Types.ObjectId,
         ref:'User'
-    },
-    titleofFilm:{
-        type:String,
-        required:[true, 'Need to specify which film']
     }
 },{timestamps:true})
 

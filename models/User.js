@@ -34,6 +34,9 @@ const userSchema = new mongoose.Schema({
     },
     hobbies:[{
         type:String
+    }],
+    favorites:[{
+        type:String
     }]
 },
 {
