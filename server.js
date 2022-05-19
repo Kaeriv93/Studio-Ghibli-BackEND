@@ -17,15 +17,6 @@ const cors = require('cors')
 //     optionSuccessStatus:200
 // }
 
-let JWTToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyODU2MzU3OGFmMWI2MmUyZTg3OTk4OCIsImlhdCI6MTY1MjkzMTY2OSwiZXhwIjoxNjUzMTkwODY5fQ.1reFkmuMyjUmpWrDuJON1F64-xrKS2-GF1-XdjEkehE'; // Get this from cookie or localstorage, hardcoded for demonstration.
- axios
-    .get("/", { headers: {"Authorization" : `Bearer ${JWTToken}`} })
-    .then(res => {
-       this.profile = res.data;
-       console.log('Fetched Data is', res.data);
-      })
-      .catch(error => console.log(error)) 
-
 
 //Import middleware
 const morgan = require('morgan')
@@ -45,7 +36,23 @@ mongoose.connect(MONGODB_URL,{
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
+app.use(
+    cors({
+      credentials: true,
+      origin: process.env.ORIGIN || 'http://localhost:3000/'
+    })
+  );
 app.use('/', authRoutes)
+
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, PUT, POST");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept"
+    );
+    next();
+  });
 
 app.set("trust proxy", 1);
 app.use(
@@ -64,12 +71,6 @@ app.use(
     );
     
     
-    app.use(
-        cors({
-          credentials: true,
-          origin: process.env.ORIGIN || 'http://localhost:3000/'
-        })
-      );
 
 
 const db = require('./models')
