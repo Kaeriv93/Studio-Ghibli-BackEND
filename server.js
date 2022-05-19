@@ -7,6 +7,7 @@ const authRoutes = require('./Routes/AuthRoutes')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const axios = require('axios')
+const session = require('express-session')
 const corsOptions ={
 
     origin:['http://localhost:3000','https://sparkling-tiramisu-862391.netlify.app'],
@@ -45,12 +46,17 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
 app.use('/', authRoutes)
-// app.use('*', function(req, res, next) {
-//     const origin = cors.origin.contains(req.header('origin').toLowerCase()) ? req.headers.origin : cors.default;
-//     res.header("Access-Control-Allow-Origin", origin);
-//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//     next();
-//   });
+app.use(
+    session({
+      secret: process.env.SESSION_SECRET || 'Super Secret (change it)',
+      resave: true,
+      saveUninitialized: false,
+      cookie: {
+        sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
+        secure: process.env.NODE_ENV === "production", // must be true if sameSite='none'
+      }
+    })
+ );
 
 
 const db = require('./models')
