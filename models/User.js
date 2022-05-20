@@ -34,10 +34,12 @@ const userSchema = new mongoose.Schema({
         default:'Tell us about yourself!'
     },
     hobbies:[{
-        type:String
+        type:String,
+        default:'List your hobbies!'
     }],
     favorites:[{
-        type:String
+        type:String,
+        default:'Got a favorite movie put it here!'
     }],
     reviews:[{
         type:String,
